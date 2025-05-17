@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import styles from "./GeneratedIdea.module.css";
-import get_api_answer from "@/lib/deepseek_api";
 import { useIdeaContext } from "@/lib/IdeaContext";
 import { useUser } from "@/lib/UserContext";
 
