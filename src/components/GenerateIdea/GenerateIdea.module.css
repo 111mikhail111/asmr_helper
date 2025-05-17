@@ -1,0 +1,119 @@
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: var(--foreground);
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--foreground);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section {
+  background: var(--background);
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.section h2 {
+  margin-top: 0;
+  color: var(--foreground);
+}
+
+.slider {
+  width: 100%;
+  margin: 1rem 0;
+  accent-color: var(--foreground);
+}
+
+.durationValue {
+  display: block;
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--foreground);
+}
+
+.triggersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.triggerButton {
+  background: var(--background);
+  border: 1px solid var(--background-light);
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  color: var(--foreground);
+}
+
+.triggerButton span {
+  font-size: 0.8rem;
+  color: var(--foreground-light);
+}
+
+.triggerButton:hover {
+  border-color: var(--foreground-light);
+}
+
+.triggerButton.selected {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.triggerButton.selected span {
+  color: var(--background-light);
+}
+
+.submitButton {
+  width: 100%;
+  padding: 1rem;
+  background: var(--foreground);
+  color: var(--background);
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--foreground);
+  color: var(--background);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  display: none;
+}
+
+.disabled:hover .tooltip {
+  display: block;
+}

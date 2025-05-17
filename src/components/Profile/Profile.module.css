@@ -1,0 +1,104 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.profileHeader {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  align-items: flex-start;
+}
+
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatarPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: var(--foreground);
+  color: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.userInfo {
+  flex: 1;
+  background: var(--background-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.infoItem {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.infoLabel {
+  font-weight: bold;
+  min-width: 150px;
+  color: var(--foreground-light);
+}
+
+.favoritesSection {
+  margin-top: 2rem;
+}
+
+.themesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.themeCard {
+  background: var(--background);
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: transform 0.2s;
+}
+
+.themeCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.themeMeta {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--foreground-light);
+}
+
+@media (max-width: 768px) {
+  .profileHeader {
+    flex-direction: column;
+  }
+
+  .themesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.logoutButton {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--foreground-light);
+  color: var(--background);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.nothemes {
+    margin-top: 1.5rem;
+}

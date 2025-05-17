@@ -1,0 +1,43 @@
+.card {
+  background: var(--background);
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.category {
+  color: var(--foreground-light);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.name {
+  color: var(--foreground);
+  margin: 0.5rem 0;
+}
+
+.description {
+  color: var(--foreground-light);
+  font-size: 0.9rem;
+}
+
+.favoriteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--foreground-light);
+}

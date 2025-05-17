@@ -1,0 +1,51 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--background);
+  border-bottom: 1px solid var(--background-light);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--foreground);
+}
+
+.profile {
+  position: relative;
+}
+
+.profileButton {
+  background: none;
+  border: 1px solid var(--background-light);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--background);
+  border: 1px solid var(--background-light);
+  border-radius: 4px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.dropdown a {
+  color: var(--foreground);
+  text-decoration: none;
+  padding: 0.5rem;
+}
+
+.dropdown a:hover {
+  background: var(--background-light);
+}

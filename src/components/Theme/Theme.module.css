@@ -1,0 +1,107 @@
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: var(--foreground);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.ideaCard {
+  background: var(--background);
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.ideaTitle {
+  font-size: 1.8rem;
+  margin-top: 0;
+  color: var(--foreground);
+}
+
+.duration {
+  color: var(--foreground-light);
+  font-size: 1.1rem;
+}
+
+.timeline {
+  margin: 2rem 0;
+}
+
+.timeline h3 {
+  border-bottom: 1px solid var(--background-light);
+  padding-bottom: 0.5rem;
+}
+
+.timelineList {
+  list-style: none;
+  padding: 0;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px dashed var(--background-light);
+}
+
+.timecode {
+  font-weight: bold;
+  width: 60px;
+  color: var(--foreground);
+}
+
+.triggerName {
+  flex-grow: 1;
+  color: var(--foreground);
+}
+
+.triggerDuration {
+  color: var(--foreground-light);
+  font-size: 0.9rem;
+}
+
+.triggersList {
+  margin-top: 2rem;
+}
+
+.triggersGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.triggerBadge {
+  background: var(--background-light);
+  color: var(--foreground);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.favoriteButton {
+  background: var(--background);
+  border: 1px solid var(--foreground);
+  color: var(--foreground);
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.favoriteButton:hover {
+  background: var(--foreground-light);
+  color: var(--background);
+}
+
+.favoriteButton.favorited {
+  background: var(--foreground);
+  color: var(--background);
+}
