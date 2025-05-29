@@ -24,6 +24,7 @@ const Home = () => {
     try {
       const response = await fetch("/api/trigger_types");
       const data = await response.json();
+      console.log('типы триггеров:', data)
       setCategories(data);
     } catch (err) {
       setError("Не удалось загрузить типы триггеров");
@@ -40,17 +41,21 @@ const Home = () => {
     }
   };
 
-  const filteredTriggers = triggers.filter((trigger) => {
-    const matchesSearch =
-      trigger.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (trigger.description &&
-        trigger.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory =
-      selectedCategory === "Все" ||
-      (trigger.trigger_type_id &&
-        trigger.trigger_type_id === selectedCategory.id);
-    return matchesSearch && matchesCategory;
-  });
+  const filteredTriggers = triggers
+    ? triggers.filter((trigger) => {
+        const matchesSearch =
+          trigger.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (trigger.description &&
+            trigger.description
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()));
+        const matchesCategory =
+          selectedCategory === "Все" ||
+          (trigger.trigger_type_id &&
+            trigger.trigger_type_id === selectedCategory.id);
+        return matchesSearch && matchesCategory;
+      })
+    : triggers;
 
   return (
     <div className={styles.container}>
@@ -79,7 +84,7 @@ const Home = () => {
             >
               Все
             </button>
-            {categories.map((category) => (
+            {categories && categories.map((category) => (
               <button
                 key={category.id}
                 className={`${styles.categoryButton} ${
@@ -108,7 +113,10 @@ const Home = () => {
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.triggersGrid}>
-          <button onClick={() => setShowForm(true)} className={styles.addTriggerCard}>
+          <button
+            onClick={() => setShowForm(true)}
+            className={styles.addTriggerCard}
+          >
             Добавить триггер
           </button>
 

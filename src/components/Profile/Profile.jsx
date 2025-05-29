@@ -18,6 +18,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (asmruser?.id) {
+      console.log('userL:::', asmruser);
       fetchFavoriteThemes();
     }
   }, [asmruser]);

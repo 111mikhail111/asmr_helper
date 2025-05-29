@@ -21,6 +21,7 @@ export async function POST(request) {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
+        created_at: Date.now(),
         // Добавьте другие нужные поля
       },
     });

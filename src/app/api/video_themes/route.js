@@ -6,13 +6,13 @@ export async function POST(request) {
     const { name, duration } = await request.json();
 
     // Проверяем существующую тему
-    const existingTheme = videoThemeService.getThemeByName(name);
+    const existingTheme = await videoThemeService.getThemeByName(name);
     if (existingTheme) {
       return Response.json(existingTheme);
     }
 
     // Создаем новую тему
-    const newTheme = videoThemeService.createTheme(name, duration);
+    const newTheme = await videoThemeService.createTheme(name, duration);
     return Response.json(newTheme);
   } catch (error) {
     console.error("Ошибка при сохранении темы:", error);
@@ -25,7 +25,7 @@ export async function POST(request) {
 
 export async function GET() {
   try {
-    const themes = videoThemeService.getAllThemes();
+    const themes = await videoThemeService.getAllThemes();
     return Response.json(themes);
   } catch (error) {
     console.error("Ошибка при получении тем:", error);

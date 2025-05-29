@@ -1,305 +1,236 @@
-import Database from "better-sqlite3";
-import path from "path";
+import { Pool } from "pg";
 
-// Инициализация БД (файл будет создан в корне проекта как `asmr.db`)
-const dbPath = path.join(process.cwd(), "asmr.db");
-const db = new Database(dbPath, { verbose: console.log }); // Логирование запросов
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false },
+});
 
-// Создаём таблицы (если их нет)
-function initDB() {
-  // 1. Вид триггера (категория: звук, визуал, тактильный и т.д.)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS trigger_type (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      description TEXT
-    );
-  `);
-
-  // 2. Триггер (конкретный триггер: "шёпот", "перелистывание книги" и т.д.)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS trigger (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      description TEXT,
-      audio_file_path TEXT,
-      trigger_type_id INTEGER,
-      FOREIGN KEY (trigger_type_id) REFERENCES trigger_type(id)
-    );
-  `);
-
-  // 3. Тема для видео (например, "Библиотека", "Дождь в лесу")
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS video_theme (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      description TEXT,
-      background_image_path TEXT,
-      duration INTEGER
-    );
-  `);
-
-  // 4. Связь триггеров и тем (многие-ко-многим)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS video_theme_triggers (
-      video_theme_id INTEGER,
-      trigger_id INTEGER,
-      timecode TEXT,
-      duration INTEGER,
-      PRIMARY KEY (video_theme_id, trigger_id),
-      FOREIGN KEY (video_theme_id) REFERENCES video_theme(id),
-      FOREIGN KEY (trigger_id) REFERENCES trigger(id)
-    );
-  `);
-
-  // 5. Пользователь
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS user (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL
-    );
-  `);
-
-  // 6. Избранные триггеры пользователя (многие-ко-многим)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS user_favorite_triggers (
-      user_id INTEGER,
-      trigger_id INTEGER,
-      PRIMARY KEY (user_id, trigger_id),
-      FOREIGN KEY (user_id) REFERENCES user(id),
-      FOREIGN KEY (trigger_id) REFERENCES trigger(id)
-    );
-  `);
-
-  // 7. Избранные темы пользователя (многие-ко-многим)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS user_favorite_themes (
-      user_id INTEGER,
-      video_theme_id INTEGER,
-      PRIMARY KEY (user_id, video_theme_id),
-      FOREIGN KEY (user_id) REFERENCES user(id),
-      FOREIGN KEY (video_theme_id) REFERENCES video_theme(id)
-    );
-  `);
-}
-
-// Инициализируем БД при первом подключении
-initDB();
-
-// Экспортируем методы для работы с БД
+// Основные методы работы с БД
 export default {
-  // Пример метода для добавления триггера
-  addTrigger: (name, description, triggerTypeId, audio_path = null) => {
-    const stmt = db.prepare(`
-      INSERT INTO trigger (name, description, trigger_type_id, audio_file_path)
-      VALUES (?, ?, ?, ?)
-    `);
-    return stmt.run(name, description, triggerTypeId, audio_path);
+  // Добавить триггер
+  addTrigger: async (name, description, triggerTypeId, audio_path = null) => {
+    const res = await pool.query(
+      `INSERT INTO trigger (name, description, trigger_type_id, audio_file_path)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [name, description, triggerTypeId, audio_path]
+    );
+    return res.rows[0];
   },
 
-  addTriggerType: (name, description) => {
-    const stmt = db.prepare(`
-      INSERT INTO trigger_type (name, description)
-      VALUES (?, ?)
-    `);
-    return stmt.run(name, description);
+  // Добавить тип триггера
+  addTriggerType: async (name, description) => {
+    const res = await pool.query(
+      `INSERT INTO trigger_type (name, description)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [name, description]
+    );
+    return res.rows[0];
   },
 
   // Получить все триггеры
-  getAllTriggers: () => {
-    return db
-      .prepare(
-        `
+  getAllTriggers: async () => {
+    const res = await pool.query(`
       SELECT t.*, tt.name AS trigger_type_name 
       FROM trigger t
       LEFT JOIN trigger_type tt ON t.trigger_type_id = tt.id
-    `
-      )
-      .all();
+    `);
+    return res.rows;
   },
 
-  getAllTriggerTypes: () => {
-    return db
-      .prepare(
-        `
-      SELECT * 
-      FROM trigger_type
-    `
-      )
-      .all();
+  // Получить все типы триггеров
+  getAllTriggerTypes: async () => {
+    const res = await pool.query("SELECT * FROM trigger_type");
+    return res.rows;
   },
 
   // Добавить пользователя
-  addUser: (username, email, passwordHash) => {
-    const stmt = db.prepare(`
-    INSERT INTO user (username, email, password_hash, created_at)
-    VALUES (?, ?, ?, datetime('now'))
-  `);
-    const result = stmt.run(username, email, passwordHash);
-
-    // Возвращаем созданного пользователя
-    return db
-      .prepare("SELECT * FROM user WHERE id = ?")
-      .get(result.lastInsertRowid);
+  addUser: async (username, email, passwordHash) => {
+    const res = await pool.query(
+      `INSERT INTO app_user (username, email, password_hash, created_at)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING *`,
+      [username, email, passwordHash]
+    );
+    return res.rows[0];
   },
 
-  // Проверка существования пользователя по email
-  getUserByEmail: (email) => {
-    return db.prepare("SELECT * FROM user WHERE email = ?").get(email);
+  // Получить пользователя по email
+  getUserByEmail: async (email) => {
+    const res = await pool.query("SELECT * FROM app_user WHERE email = $1", [
+      email,
+    ]);
+    return res.rows[0];
   },
 
   // Добавить триггер в избранное пользователя
-  addFavoriteTrigger: (userId, triggerId) => {
-    const stmt = db.prepare(`
-      INSERT OR IGNORE INTO user_favorite_triggers (user_id, trigger_id)
-      VALUES (?, ?)
-    `);
-    return stmt.run(userId, triggerId);
+  addFavoriteTrigger: async (userId, triggerId) => {
+    try {
+      const res = await pool.query(
+        `INSERT INTO user_favorite_triggers (user_id, trigger_id)
+         VALUES ($1, $2)
+         ON CONFLICT (user_id, trigger_id) DO NOTHING
+         RETURNING *`,
+        [userId, triggerId]
+      );
+      return { success: !!res.rows[0] };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   },
-
-  // ... другие методы по необходимости
 };
 
+// Сервис для работы с избранными темами
 export const favoriteThemesService = {
-  getFavoriteThemesByUserId: (userId) => {
+  // Получить избранные темы пользователя
+  getFavoriteThemesByUserId: async (userId) => {
     if (!userId || isNaN(userId)) {
       throw new Error("Неверный ID пользователя");
     }
 
-    const query = `
-      SELECT vt.* 
-      FROM user_favorite_themes uft
-      JOIN video_theme vt ON uft.video_theme_id = vt.id
-      WHERE uft.user_id = ?
-    `;
-
-    return db.prepare(query).all(userId);
+    const res = await pool.query(
+      `SELECT vt.* 
+       FROM user_favorite_themes uft
+       JOIN video_theme vt ON uft.video_theme_id = vt.id
+       WHERE uft.user_id = $1`,
+      [userId]
+    );
+    return res.rows;
   },
 
-  addFavoriteTheme: (userId, themeId) => {
+  // Добавить тему в избранное
+  addFavoriteTheme: async (userId, themeId) => {
     // Проверяем существование записи
-    const existingFavorite = db
-      .prepare(
-        `
-      SELECT 1 FROM user_favorite_themes 
-      WHERE user_id = ? AND video_theme_id = ?
-    `
-      )
-      .get(userId, themeId);
+    const existing = await pool.query(
+      `SELECT 1 FROM user_favorite_themes 
+       WHERE user_id = $1 AND video_theme_id = $2`,
+      [userId, themeId]
+    );
 
-    if (existingFavorite) {
+    if (existing.rows.length > 0) {
       return { success: false, message: "Тема уже в избранном" };
     }
 
     // Добавляем в избранное
-    db.prepare(
-      `
-      INSERT INTO user_favorite_themes (user_id, video_theme_id)
-      VALUES (?, ?)
-    `
-    ).run(userId, themeId);
+    await pool.query(
+      `INSERT INTO user_favorite_themes (user_id, video_theme_id)
+       VALUES ($1, $2)`,
+      [userId, themeId]
+    );
 
     return { success: true };
   },
 
-  removeFavoriteTheme: (userId, themeId) => {
-    const stmt = db.prepare(`
-      DELETE FROM user_favorite_themes
-      WHERE user_id = ? AND video_theme_id = ?
-    `);
-    return stmt.run(userId, themeId);
+  // Удалить тему из избранного
+  removeFavoriteTheme: async (userId, themeId) => {
+    const res = await pool.query(
+      `DELETE FROM user_favorite_themes
+       WHERE user_id = $1 AND video_theme_id = $2
+       RETURNING *`,
+      [userId, themeId]
+    );
+    return { success: res.rows.length > 0 };
   },
 };
 
+// Сервис для работы с темами видео
 export const videoThemeService = {
   // Получить все темы
-  getAllThemes: () => {
-    return db.prepare("SELECT * FROM video_theme").all();
+  getAllThemes: async () => {
+    const res = await pool.query("SELECT * FROM video_theme");
+    return res.rows;
   },
 
   // Найти тему по имени
-  getThemeByName: (name) => {
-    return db.prepare("SELECT * FROM video_theme WHERE name = ?").get(name);
+  getThemeByName: async (name) => {
+    const res = await pool.query("SELECT * FROM video_theme WHERE name = $1", [
+      name,
+    ]);
+    return res.rows[0];
   },
 
   // Создать новую тему
-  createTheme: (name, duration) => {
-    const stmt = db.prepare(`
-      INSERT INTO video_theme (name, duration)
-      VALUES (?, ?)
-    `);
-    const result = stmt.run(name, duration);
-
-    return db
-      .prepare("SELECT * FROM video_theme WHERE id = ?")
-      .get(result.lastInsertRowid);
+  createTheme: async (name, duration) => {
+    const res = await pool.query(
+      `INSERT INTO video_theme (name, duration)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [name, duration]
+    );
+    return res.rows[0];
   },
 
-  // Дополнительные методы по работе с темами
-  getThemeById: (id) => {
-    return db.prepare("SELECT * FROM video_theme WHERE id = ?").get(id);
+  // Получить тему по ID
+  getThemeById: async (id) => {
+    const res = await pool.query("SELECT * FROM video_theme WHERE id = $1", [
+      id,
+    ]);
+    return res.rows[0];
   },
 
-  updateTheme: (id, updates) => {
+  // Обновить тему
+  updateTheme: async (id, updates) => {
     const fields = Object.keys(updates)
-      .map((key) => `${key} = ?`)
+      .map((key, index) => `${key} = $${index + 1}`)
       .join(", ");
     const values = Object.values(updates);
-    values.push(id); // Добавляем id в конец для WHERE
+    values.push(id);
 
-    const stmt = db.prepare(`
+    const query = `
       UPDATE video_theme
       SET ${fields}
-      WHERE id = ?
-    `);
-    stmt.run(...values);
+      WHERE id = $${values.length}
+      RETURNING *
+    `;
 
-    return videoThemeService.getThemeById(id);
+    const res = await pool.query(query, values);
+    return res.rows[0];
   },
 
-  deleteTheme: (id) => {
-    return db.prepare("DELETE FROM video_theme WHERE id = ?").run(id);
+  // Удалить тему
+  deleteTheme: async (id) => {
+    const res = await pool.query(
+      "DELETE FROM video_theme WHERE id = $1 RETURNING *",
+      [id]
+    );
+    return { success: res.rows.length > 0 };
   },
 
-  getThemeWithTriggers: (themeId) => {
+  // Получить тему с триггерами
+  getThemeWithTriggers: async (themeId) => {
     // Получаем основную информацию о теме
-    const theme = db
-      .prepare(
-        `
-      SELECT id, name AS title, duration 
-      FROM video_theme 
-      WHERE id = ?
-    `
-      )
-      .get(themeId);
+    const themeRes = await pool.query(
+      `SELECT id, name AS title, duration 
+       FROM video_theme 
+       WHERE id = $1`,
+      [themeId]
+    );
 
-    if (!theme) {
+    if (!themeRes.rows[0]) {
       throw new Error("Тема не найдена");
     }
 
+    const theme = themeRes.rows[0];
+
     // Получаем все триггеры для темы
-    const triggers = db
-      .prepare(
-        `
-      SELECT 
-        t.name,
-        vtt.timecode,
-        vtt.duration
-      FROM video_theme_triggers vtt
-      JOIN trigger t ON vtt.trigger_id = t.id
-      WHERE vtt.video_theme_id = ?
-      ORDER BY vtt.timecode
-    `
-      )
-      .all(themeId);
+    const triggersRes = await pool.query(
+      `SELECT 
+         t.name,
+         vtt.timecode,
+         vtt.duration
+       FROM video_theme_triggers vtt
+       JOIN trigger t ON vtt.trigger_id = t.id
+       WHERE vtt.video_theme_id = $1
+       ORDER BY vtt.timecode`,
+      [themeId]
+    );
 
     // Форматируем результат
     return {
       title: theme.title,
       duration: theme.duration,
-      triggers: triggers.map((trigger) => ({
+      triggers: triggersRes.rows.map((trigger) => ({
         timecode: trigger.timecode,
         name: trigger.name,
         duration: trigger.duration,
@@ -308,84 +239,102 @@ export const videoThemeService = {
   },
 };
 
+// Сервис для работы с триггерами тем
 export const videoThemeTriggersService = {
   // Получить триггеры по ID темы
-  getTriggersByThemeId: (themeId) => {
-    return db
-      .prepare(
-        `
-      SELECT t.*, vtt.timecode, vtt.duration
-      FROM video_theme_triggers vtt
-      JOIN trigger t ON vtt.trigger_id = t.id
-      WHERE vtt.video_theme_id = ?
-    `
-      )
-      .all(themeId);
+  getTriggersByThemeId: async (themeId) => {
+    const res = await pool.query(
+      `SELECT t.*, vtt.timecode, vtt.duration
+       FROM video_theme_triggers vtt
+       JOIN trigger t ON vtt.trigger_id = t.id
+       WHERE vtt.video_theme_id = $1`,
+      [themeId]
+    );
+    return res.rows;
   },
 
   // Найти триггер по имени
-  getTriggerByName: (name) => {
-    return db.prepare("SELECT id FROM trigger WHERE name = ?").get(name);
+  getTriggerByName: async (name) => {
+    const res = await pool.query("SELECT id FROM trigger WHERE name = $1", [
+      name,
+    ]);
+    return res.rows[0];
   },
 
   // Обновить триггеры для темы (полная замена)
-  updateThemeTriggers: (themeId, triggers) => {
-    // Получаем ID триггеров по их именам
-    const triggerIds = triggers.map((trigger) => {
-      const result = db
-        .prepare("SELECT id FROM trigger WHERE name = ?")
-        .get(trigger.name);
+  updateThemeTriggers: async (themeId, triggers) => {
+    const client = await pool.connect();
 
-      if (!result) {
-        throw new Error(`Триггер '${trigger.name}' не найден`);
+    try {
+      await client.query("BEGIN");
+
+      // Получаем ID триггеров по их именам
+      const triggerIds = [];
+      for (const trigger of triggers) {
+        const res = await client.query(
+          "SELECT id FROM trigger WHERE name = $1",
+          [trigger.name]
+        );
+
+        if (!res.rows[0]) {
+          throw new Error(`Триггер '${trigger.name}' не найден`);
+        }
+
+        triggerIds.push({
+          id: res.rows[0].id,
+          timecode: trigger.timecode,
+          duration: trigger.duration,
+        });
       }
-      return {
-        id: result.id,
-        timecode: trigger.timecode,
-        duration: trigger.duration,
-      };
-    });
 
-    // Удаляем старые триггеры темы
-    db.prepare("DELETE FROM video_theme_triggers WHERE video_theme_id = ?").run(
-      themeId
-    );
+      // Удаляем старые триггеры темы
+      await client.query(
+        "DELETE FROM video_theme_triggers WHERE video_theme_id = $1",
+        [themeId]
+      );
 
-    // Сохраняем новые триггеры темы
-    const stmt = db.prepare(`
-      INSERT INTO video_theme_triggers 
-      (video_theme_id, trigger_id, timecode, duration)
-      VALUES (?, ?, ?, ?)
-    `);
+      // Сохраняем новые триггеры темы
+      for (const { id, timecode, duration } of triggerIds) {
+        await client.query(
+          `INSERT INTO video_theme_triggers 
+           (video_theme_id, trigger_id, timecode, duration)
+           VALUES ($1, $2, $3, $4)`,
+          [themeId, id, timecode, duration]
+        );
+      }
 
-    db.transaction(() => {
-      triggerIds.forEach(({ id, timecode, duration }) => {
-        stmt.run(themeId, id, timecode, duration);
-      });
-    })();
-
-    return { success: true, count: triggerIds.length };
+      await client.query("COMMIT");
+      return { success: true, count: triggerIds.length };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   // Добавить один триггер к теме
-  addTriggerToTheme: (themeId, triggerId, timecode, duration) => {
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO video_theme_triggers 
-      (video_theme_id, trigger_id, timecode, duration)
-      VALUES (?, ?, ?, ?)
-    `);
-    return stmt.run(themeId, triggerId, timecode, duration);
+  addTriggerToTheme: async (themeId, triggerId, timecode, duration) => {
+    const res = await pool.query(
+      `INSERT INTO video_theme_triggers 
+       (video_theme_id, trigger_id, timecode, duration)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (video_theme_id, trigger_id) 
+       DO UPDATE SET timecode = $3, duration = $4
+       RETURNING *`,
+      [themeId, triggerId, timecode, duration]
+    );
+    return res.rows[0];
   },
 
   // Удалить триггер из темы
-  removeTriggerFromTheme: (themeId, triggerId) => {
-    return db
-      .prepare(
-        `
-      DELETE FROM video_theme_triggers 
-      WHERE video_theme_id = ? AND trigger_id = ?
-    `
-      )
-      .run(themeId, triggerId);
+  removeTriggerFromTheme: async (themeId, triggerId) => {
+    const res = await pool.query(
+      `DELETE FROM video_theme_triggers 
+       WHERE video_theme_id = $1 AND trigger_id = $2
+       RETURNING *`,
+      [themeId, triggerId]
+    );
+    return { success: res.rows.length > 0 };
   },
 };

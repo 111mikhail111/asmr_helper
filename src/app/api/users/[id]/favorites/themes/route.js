@@ -5,7 +5,7 @@ export async function GET(request, { params }) {
     console.log("Получение избранных тем для пользователя:", params.id);
     const userId = params.id;
 
-    const favoriteThemes =
+    const favoriteThemes = await
       favoriteThemesService.getFavoriteThemesByUserId(userId);
 
     console.log("Результат запроса:", favoriteThemes);
@@ -36,7 +36,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const result = favoriteThemesService.addFavoriteTheme(userId, themeId);
+    const result = await favoriteThemesService.addFavoriteTheme(userId, themeId);
 
     if (!result.success) {
       return Response.json(

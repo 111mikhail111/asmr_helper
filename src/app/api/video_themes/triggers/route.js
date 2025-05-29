@@ -5,7 +5,7 @@ export async function POST(request) {
   try {
     const { themeId, triggers } = await request.json();
 
-    const result = videoThemeTriggersService.updateThemeTriggers(
+    const result = await videoThemeTriggersService.updateThemeTriggers(
       themeId,
       triggers
     );
@@ -32,7 +32,7 @@ export async function GET(request) {
       return Response.json({ error: "Не указан ID темы" }, { status: 400 });
     }
 
-    const triggers = videoThemeTriggersService.getTriggersByThemeId(themeId);
+    const triggers = await videoThemeTriggersService.getTriggersByThemeId(themeId);
     return Response.json(triggers);
   } catch (error) {
     console.error("Ошибка при получении триггеров темы:", error);
