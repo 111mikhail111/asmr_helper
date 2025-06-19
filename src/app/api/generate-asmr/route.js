@@ -2,10 +2,9 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-     
   const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY, // Теперь ключ только на сервере
+    baseURL: "https://router.huggingface.co/featherless-ai/v1",
+    apiKey: process.env.HF_TOKEN, // Теперь ключ только на сервере
   });
   try {
     const { triggers, req, ex, duration } = await request.json();
@@ -60,7 +59,7 @@ export async function POST(request) {
 
     // Вызов OpenAI через OpenRouter
     const completion = await openai.chat.completions.create({
-      model: "microsoft/mai-ds-r1:free",
+      model: "moonshotai/Kimi-Dev-72B",
       messages: [
         {
           role: "system",

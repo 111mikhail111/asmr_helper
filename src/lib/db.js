@@ -39,6 +39,16 @@ export default {
     return res.rows;
   },
 
+  getAllTriggersByTheme: async (themeId) => {
+    const res = await pool.query(`
+      SELECT t.name AS trigger_type_name 
+      FROM trigger t
+      LEFT JOIN trigger_type tt ON t.trigger_type_id = tt.id
+      WHERE tt.id = $1
+    `, [themeId]);
+    return res.rows;
+  },
+
   // Получить все типы триггеров
   getAllTriggerTypes: async () => {
     const res = await pool.query("SELECT * FROM trigger_type");
@@ -78,6 +88,25 @@ export default {
     } catch (error) {
       return { success: false, error: error.message };
     }
+  },
+
+  async updateTrigger(id, name, description, triggerTypeId, audioFile) {
+    const res = await pool.query(
+      `UPDATE trigger
+       SET name = $1, description = $2, trigger_type_id = $3, audio_file_path = $4
+       WHERE id = $5
+       RETURNING *`,
+      [name, description, triggerTypeId, audioFile, id]
+    );
+    return res.rows[0];
+  },
+
+  async deleteTrigger(id) {
+    const res = await pool.query(
+      `DELETE FROM trigger WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    return { success: res.rows.length > 0 };
   },
 };
 

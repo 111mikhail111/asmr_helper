@@ -90,3 +90,103 @@
   transition: transform 0.2s;
   font-size: 1.5rem;
 }
+
+/* Добавьте это в ваш TriggerCard.module.css */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal {
+  background-color: var(--background);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  animation: slideUp 0.3s ease;
+  border: 1px solid var(--background-light);
+}
+
+.modal h2 {
+  color: var(--foreground);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modal p {
+  color: var(--foreground-light);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.cancelButton,
+.deleteButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.9rem;
+}
+
+.cancelButton {
+  background-color: var(--background-light);
+  color: var(--foreground);
+}
+
+.cancelButton:hover {
+  background-color: #e0e0e0;
+}
+
+.deleteButton {
+  background-color: #ff4444;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #e53935;
+  transform: translateY(-1px);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -3,18 +3,24 @@
 import { useState, useEffect } from "react";
 import styles from "./AddTriggerForm.module.css";
 
-const AddTriggerForm = ({ onClose }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [audioFile, setAudioFile] = useState(null);
-  const [triggerTypeId, setTriggerTypeId] = useState("");
+const AddTriggerForm = ({ onClose, initialData = null }) => {
+  // Add initialData prop
+  const [name, setName] = useState(initialData ? initialData.name : "");
+  const [description, setDescription] = useState(
+    initialData ? initialData.description : ""
+  );
+  const [audioFile, setAudioFile] = useState(
+    initialData ? initialData.audio_file : null
+  ); // Assuming audio_file from backend
+  const [triggerTypeId, setTriggerTypeId] = useState(
+    initialData ? initialData.trigger_type_id : ""
+  );
   const [triggerTypes, setTriggerTypes] = useState([]);
   const [error, setError] = useState("");
   const [showAddTypeModal, setShowAddTypeModal] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeDescription, setNewTypeDescription] = useState("");
 
-  // Загружаем типы триггеров при монтировании
   useEffect(() => {
     fetchTriggerTypes();
   }, []);
@@ -44,7 +50,6 @@ const AddTriggerForm = ({ onClose }) => {
 
       if (!response.ok) throw new Error("Failed to add trigger type");
 
-      // Обновляем список типов
       await fetchTriggerTypes();
       setShowAddTypeModal(false);
       setNewTypeName("");
@@ -58,20 +63,29 @@ const AddTriggerForm = ({ onClose }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("/api/triggers", {
-        method: "POST",
+      const method = initialData ? "PUT" : "POST"; // Determine method based on initialData
+      const url = "/api/triggers";
+      const bodyData = {
+        name,
+        description,
+        triggerTypeId,
+        audioFile,
+      };
+
+      if (initialData) {
+        bodyData.id = initialData.id; // Include ID for update
+      }
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          description,
-          triggerTypeId,
-          audioFile,
-        }),
+        body: JSON.stringify(bodyData),
       });
 
-      if (!response.ok) throw new Error("Failed to add trigger");
+      if (!response.ok)
+        throw new Error(`Failed to ${initialData ? "update" : "add"} trigger`);
 
       onClose(true);
     } catch (err) {
@@ -85,11 +99,11 @@ const AddTriggerForm = ({ onClose }) => {
         <button className={styles.closeButton} onClick={() => onClose(false)}>
           ×
         </button>
-
-        <h2>Добавить новый триггер</h2>
-
+        <h2>
+          {initialData ? "Редактировать триггер" : "Добавить новый триггер"}
+        </h2>{" "}
+        {/* Dynamic title */}
         {error && <div className={styles.error}>{error}</div>}
-
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label>
@@ -151,7 +165,7 @@ const AddTriggerForm = ({ onClose }) => {
                 accept="audio/*"
                 onChange={(e) => {
                   const file = e.target.files[0];
-                  setAudioFile(file ? file.name : null); // Сохраняем только имя файла
+                  setAudioFile(file ? file.name : null);
                 }}
                 className={styles.fileInput}
               />
@@ -168,12 +182,10 @@ const AddTriggerForm = ({ onClose }) => {
               Отмена
             </button>
             <button type="submit" className={styles.submitButton}>
-              Добавить
+              {initialData ? "Сохранить изменения" : "Добавить"}
             </button>
           </div>
         </form>
-
-        {/* Модальное окно для добавления нового типа */}
         {showAddTypeModal && (
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>

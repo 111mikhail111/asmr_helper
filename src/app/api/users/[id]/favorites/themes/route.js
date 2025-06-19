@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
     const favoriteThemes = await
       favoriteThemesService.getFavoriteThemesByUserId(userId);
 
-    console.log("Результат запроса:", favoriteThemes);
+    
     return Response.json(favoriteThemes);
   } catch (error) {
     console.error("Ошибка при получении избранных тем:", error);

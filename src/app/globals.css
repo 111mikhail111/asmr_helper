@@ -1,8 +1,11 @@
 :root {
   --background: #ffffff;
-  --background-light: #a4a4a4;
-  --foreground-light: #3e3e3e;
-  --foreground: #171717;
+  --background-light: #eaeaea;
+  --foreground: #333333;
+  --foreground-light: #666666;
+  --primary: #4a6bff;
+  --primary-light: #e0e6ff;
+  --accent: #ffc107;
 }
 
 @media (prefers-color-scheme: dark) {

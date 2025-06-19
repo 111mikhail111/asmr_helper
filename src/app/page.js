@@ -10,14 +10,18 @@ import AddTriggerForm from "@/components/AddTrigger/AddTriggerForm";
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Все");
-  const [showForm, setShowForm] = useState(false);
-  const [triggers, setTriggers] = useState([]); // Инициализируем как массив
-  const [categories, setCategories] = useState([]); // Инициализируем как массив
+  const [showAddForm, setShowAddForm] = useState(false); // Renamed for clarity
+  const [showEditForm, setShowEditForm] = useState(false); // New state for edit form
+  const [editingTrigger, setEditingTrigger] = useState(null); // New state for trigger being edited
+  const [triggers, setTriggers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [error, setError] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // New state for delete confirmation
+  const [triggerToDelete, setTriggerToDelete] = useState(null); // New state for trigger to delete
 
   useEffect(() => {
     fetchTriggerTypes();
-    fetchTriggers(); // Добавьте эту функцию для загрузки триггеров
+    fetchTriggers();
   }, []);
 
   const fetchTriggerTypes = async () => {
@@ -38,6 +42,47 @@ const Home = () => {
       setTriggers(data);
     } catch (err) {
       setError("Не удалось загрузить триггеры");
+    }
+  };
+
+  const handleDeleteTrigger = async (id) => {
+    try {
+      const response = await fetch("/api/triggers", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) throw new Error("Failed to delete trigger");
+
+      fetchTriggers(); // Refresh the list of triggers
+      setShowDeleteConfirm(false); // Close confirmation
+      setTriggerToDelete(null); // Clear trigger to delete
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleEditTrigger = (trigger) => {
+    setEditingTrigger(trigger);
+    setShowEditForm(true);
+  };
+
+  const handleCloseAddForm = (success) => {
+    setShowAddForm(false);
+    if (success) {
+      fetchTriggerTypes();
+      fetchTriggers();
+    }
+  };
+
+  const handleCloseEditForm = (success) => {
+    setShowEditForm(false);
+    setEditingTrigger(null);
+    if (success) {
+      fetchTriggers();
     }
   };
 
@@ -62,7 +107,7 @@ const Home = () => {
       <Header />
 
       <main className={styles.main}>
-        <Link href={"/generate_idea"}>
+        <Link href={"/generate_from_themes"}>
           <button className={styles.generateButton}>Сгенерировать идею</button>
         </Link>
 
@@ -98,23 +143,50 @@ const Home = () => {
           </div>
         </div>
 
-        {showForm && (
+        {showAddForm && (
           <AddTriggerForm
-            onClose={(success) => {
-              setShowForm(false);
-              if (success) {
-                fetchTriggerTypes();
-                fetchTriggers(); // Обновляем список триггеров
-              }
-            }}
+            onClose={handleCloseAddForm}
           />
+        )}
+
+        {showEditForm && editingTrigger && (
+          <AddTriggerForm // Reuse AddTriggerForm for editing
+            onClose={handleCloseEditForm}
+            initialData={editingTrigger} // Pass existing trigger data for editing
+          />
+        )}
+
+        {showDeleteConfirm && triggerToDelete && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <h2>Подтверждение удаления</h2>
+              <p>Вы уверены, что хотите удалить триггер {triggerToDelete.name}?</p>
+              <div className={styles.buttonGroup}>
+                <button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setTriggerToDelete(null);
+                  }}
+                >
+                  Отмена
+                </button>
+                <button
+                  className={styles.deleteButton}
+                  onClick={() => handleDeleteTrigger(triggerToDelete.id)}
+                >
+                  Удалить
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.triggersGrid}>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => setShowAddForm(true)}
             className={styles.addTriggerCard}
           >
             Добавить триггер
@@ -125,14 +197,19 @@ const Home = () => {
               key={trigger.id}
               name={trigger.name}
               description={trigger.description}
-              category={trigger.trigger_type_name || "Без категории"}
+              category={categories.find(cat => cat.id === trigger.trigger_type_id)?.name || "Без категории"}
               isFavorite={true}
+              onEdit={() => handleEditTrigger(trigger)} // Pass edit handler
+              onDelete={() => { // Pass delete handler
+                setTriggerToDelete(trigger);
+                setShowDeleteConfirm(true);
+              }}
             />
           ))}
         </div>
         <button
           className={styles.addTriggerButton}
-          onClick={() => setShowForm(true)}
+          onClick={() => setShowAddForm(true)}
         >
           Добавить триггер
         </button>

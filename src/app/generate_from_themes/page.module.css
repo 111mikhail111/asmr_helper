@@ -1,0 +1,148 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.backButton {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: #4a6bff;
+  font-weight: 500;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.settingsSection {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.durationControl {
+  margin-bottom: 2rem;
+}
+
+.durationControl label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.durationControl input[type="range"] {
+  width: 100%;
+  max-width: 400px;
+}
+
+.topicsSelection {
+  margin-bottom: 2rem;
+}
+
+.topicsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.topicButton {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topicButton:hover {
+  border-color: #4a6bff;
+}
+
+.topicButton.selected {
+  background: #4a6bff;
+  color: white;
+  border-color: #4a6bff;
+}
+
+.generateButton {
+  padding: 1rem 2rem;
+  background: #4a6bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generateButton:hover {
+  background: #3a5bef;
+  transform: translateY(-2px);
+}
+
+.generateButton:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.timelineSection {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.timeline {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.timelineItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.timelineTime {
+  min-width: 120px;
+  font-weight: 500;
+  color: #4a6bff;
+}
+
+.timelineContent {
+  flex: 1;
+}
+
+.topicBadge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #e0e6ff;
+  color: #4a6bff;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
